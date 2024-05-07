@@ -35,14 +35,18 @@ library(mnormt)
 Read the data
 
 ```{r}
+#| fig-width: 5
+#| fig-height: 5
 setwd("~/Documents/Talks/Firenze PhD 2024/")
 crop <- read.table("cropdata.txt", header = TRUE)
 crop <- data.frame(crop)
-pairs(crop)
+pairs(crop, pch = '.')
 ```
 
 
 ```{r}
+#| fig-height: 3
+#| fig-width: 3
 G <- DAG(C ~ S + W, S ~ V, W ~ V, V ~ G + E)
 G
 drawGraph(G)
