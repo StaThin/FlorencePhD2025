@@ -1,0 +1,531 @@
+---
+title: "Analysis of crop data"
+author: "G. Marchetti"
+date: "21 03 2024"
+format: 
+  html:
+    embed-resources: true
+  pdf:
+    documentclass: scrartcl
+    number-sections: false
+    colorlinks: true
+    include-in-header: 
+      text: | 
+        \usepackage[default]{fontsetup} 
+---
+
+```{=tex}
+\DeclareMathAlphabet{\mathcal}{OMS}{cmsy}{m}{n}
+\setmathfont{NewCMMath-Regular.otf}
+\newcommand{\ci}{\hspace{0.1em}\perp\hspace{-0.95em}\perp\, }
+\renewcommand{\b}[1]{\boldsymbol{#1}}
+```
+```{r}
+#| message: false
+source("~/Documents/R_packages/cat_regression_chains/RCG/funs_RCG.R")
+library("bnlearn") 
+library("ggm")
+library(mnormt)
+```
+
+```{r}
+#| cache: true
+```
+
+Read the data
+
+```{r}
+setwd("~/Documents/Talks/Firenze PhD 2024/")
+crop <- read.table("cropdata.txt", header = TRUE)
+crop <- data.frame(crop)
+pairs(crop)
+```
+
+
+```{r}
+G <- DAG(C ~ S + W, S ~ V, W ~ V, V ~ G + E)
+G
+drawGraph(G)
+```
+
+
+## Fit of the first equation
+
+```{r}
+m_full1<- lm(C ~ S+W+V+G+E, data = crop)
+round(summary(m_full1)$coef,3)
+m_red1 <- lm(C ~ S + W, data = crop)
+anova(m_red1, m_full1, test = "F")
+```
+
+
+### LR test (asymptotic)
+
+```{r}
+#| include: false
+ci_test("C", c("V","G","E"), c("S", "W"), test = "mi-g", data = crop)
+```
+
+```{r}
+`LRtest` <- function(m_red, m_full) {
+l0 <- logLik(m_red)[1]
+lsat <- logLik(m_full)[1]
+w = 2 * (lsat - l0)
+df = m_red$df.residual - m_full$df.residual
+p = 1 - pchisq(w, df)
+c(w = w, df = df, p = p)
+}
+```
+
+```{r}
+LRtest(m_red1, m_full1)
+```
+### Second equation
+
+```{r}
+m_full2 <- lm(S ~ W + V + G + E, data = crop)
+round(summary(m_full2)$coef,3)
+m_red2 <- lm(S ~ 1, data = crop)
+anova(m_red2, m_full2, test = "F")
+```
+
+### LR test
+
+```{r}
+LRtest(m_red2, m_full2)
+```
+
+### Third equation
+
+```{r}
+m_full3 <- lm(W ~ V + G + E, data = crop)
+round(summary(m_full3)$coef,3)
+m_red3 <- lm(W ~ V, data = crop)
+anova(m_red3, m_full3, test = "F")
+```
+### LR test
+
+```{r}
+LRtest(m_red3, m_full3)
+```
+
+### Fourth equation 
+
+```{r}
+m_full4 <- lm(V ~ G + E, data = crop)
+round(summary(m_full4)$coef,3)
+m_red4 <- m_full4
+```
+
+### Last equation 
+```{r}
+m_full5 <- lm(G ~ E, data = crop)
+round(summary(m_full5)$coef,3)
+m_red5 <- lm(G ~ 1, data = crop)
+anova(m_red5, m_full5, test = "F")
+```
+
+
+### LR test
+
+```{r}
+LRtest(m_red5, m_full5)
+```
+
+
+## Fit DAG
+```{r}
+ord <- colnames(G)
+S <- cov(crop[,ord])
+lapply(fitDag(G, S, n= 200), function(x) round(x,3))
+```
+
+
+
+```{r}
+knitr::knit_exit()
+```
+
+
+Show the list of CI following the factorization of the DAG
+
+```{r}
+ci_fact(G)
+```
+Suppose  you want to test $W \ci (E,G) \mid V$ and you use the composition property
+
+```{r}
+ci.test("W", "E", "V", data = crop, test = "mi-g")
+ci.test("W", "G", "V", data = crop, test = "mi-g")
+```
+But this is wrong: the sum of the deviances is too high !
+Instead you should use another approach 
+
+```{r}
+ci_test2("W", c("E","G"), "V", data = crop)
+```
+
+Which is right? Look at the implied DAG...
+
+```{r}
+bn4 <- model2network("[E][G|E][V|G:E][W|V]")
+G4 <- amat(bn4)
+drawGraph(G4)
+lhat <- logLik(bn4, data = crop[,c("E", "G", "V", "W")])
+bn4sat <- model2network("[E][G|E][V|G:E][W|V:G:E]")
+lsat <- logLik(bn4sat, data = crop[,c("E", "G", "V", "W")])
+2*(lsat-lhat)
+```
+
+But this is too small... 
+Instead look at the correct deviance.
+
+```{r}
+G4 <- amat(bn4)
+G4
+S <- cov(crop[,c("E", "G", "V", "W")])
+fitDag(G4, S, n = 200)
+```
+**This** is right!
+
+
+
+```{r}
+ci <- ci_fact(G)
+```
+
+```{r}
+nci <- length(ci)
+out<- matrix(0,nci, 2)
+for(i in 1:nci){
+out[i,] <- ci_test2(ci[[i]][[1]], ci[[i]][[2]], ci[[i]][[3]], data = crop)$stat
+}
+addmargins(out, 1)
+```
+
+Fit the full DAG. 
+```{r}
+print(fitDag(G, cov(crop), n = 200)$dev, digits = 9)
+print(fitDag(G, cov(crop), n = 200)$df)
+```
+
+### Using bnlearn
+
+What happens if using bnlearn?
+
+```{r}
+ll0 <- logLik(bn_crop, data = crop)
+ll0
+```
+
+```{r}
+bn_crop_sat <- model2network("[G][E|G][V|G:E][N|V:E:G][W|N:V:E:G][C|W:N:V:E:G]")
+llsat <- logLik(bn_crop_sat, data = crop)
+llsat
+```
+
+The deviance is 
+```{r}
+-2*(ll0 - llsat)
+```
+
+that **is different** from the true deviance.
+
+### Using the Shipley's union basis 
+
+```{r}
+b <- basiSet(amat(bn_crop))
+b
+```
+Note that there are 9  pairwise conditional independencies instead of 4
+joint conditional independencies. 
+
+
+Below I show that the test statistic `mi-g` for the  conditional independence $X_i \ci X_j \mid C$ is  equivalent to the Gaussian deviance
+$$
+-n \log(1 - r_{ij|C}^2)
+$$
+
+
+
+```{r}
+S <- cov(crop) #    * 199/200  useless
+-200 * log(1 - pcor(c("G", "W", "V"), S)^2)
+
+ci.test("G", "W", "V", data= crop, test = "mi-g")$statistic
+```
+
+
+Below are listed the test the LRT statistics and their sum. 
+
+```{r}
+t1 <- ci.test("G", "E", test = "mi-g", data = crop); 
+g1 <- t1$statistic; df1 <- t1$parameter
+t2 <- ci.test("G", "W", "V",  test = "mi-g", data = crop)
+g2 <- t2$statistic; df2 <- t2$parameter
+t3 <- ci.test("G", "N", "V",  test = "mi-g", data = crop)
+g3 <- t3$statistic; df3 <- t3$parameter
+t4 <- ci.test("G", "C", c("W", "N"),  test = "mi-g", data = crop)
+g4 <- t4$statistic; df4 <- t4$parameter
+t5 <- ci.test("E", "W", "V",  test = "mi-g", data = crop)
+g5 <- t5$statistic; df5 <- t5$parameter
+t6 <- ci.test("E", "N", "V",  test = "mi-g", data = crop)
+g6 <- t6$statistic; df6 <- t6$parameter
+t7 <- ci.test("E", "C", c("W", "N"),  test = "mi-g", data = crop) 
+g7 <- t7$statistic; df7 <- t7$parameter
+t8 <- ci.test("V", "C", c("G", "E", "W", "N"),  test = "mi-g", data = crop)
+g8 <- t8$statistic; df8 <- t8$parameter
+t9 <- ci.test("W", "N", "V",  test = "mi-g", data = crop)
+g9 <- t9$statistic; df9 <- t9$parameter
+addmargins(
+cbind(c(g1, g2, g3, g4, g5, g6, g7, g8, g9), 
+      c(df1, df2, df3, df4, df5, df6, df7, df8, df9))
+, 1)
+```
+Therefore the sum is too large even if the test statistics are 
+apparently independent.  
+
+```{r}
+lrt <- t1$p.value + t2$p.value + t3$p.value +
+  t4$p.value + t5$p.value + t6$p.value + 
+  t7$p.value + t8$p.value + t9$p.value
+lrt
+```
+
+
+
+
+### My way
+
+
+```{r}
+g <- DAG(C ~ N+W, N ~ V, W ~ V, V ~ E + G)
+drawGraph(g)
+```
+
+### Differences between deviances
+
+
+Here I show that the Gaussian deviance of `fitDag` is the same as 
+$$
+\text{dev}  = - n \log(\det (S \hat K)).
+$$
+
+
+```{r}
+n <- 200
+d <- ncol(S)
+S <- cov(crop) 
+f <-fitDag(g, n = 200, S)
+Khat <- solve(f$Shat)
+-n * log(det(S %*% Khat))
+```
+```{r}
+f$dev
+```
+Then I define a function for the Gaussian deviance. 
+
+
+```{r}
+`lhat` <- function(Shat,n){
+  Khat <- solve(Shat)
+  d <- ncol(Shat)
+  n *log(det(Khat))/2 - n*d/2
+}
+
+lhat(f$Shat,n)
+lhat(S,n)   #sat model
+2*(lhat(S,n) -lhat(f$Shat,n))
+```
+The results are OK.
+
+
+Finally I use the **bnlearn** function `score`
+
+```{r}
+Lhat <- score(bn_crop, data = crop, type = "loglik-g")
+Lsat <- score(bn_crop_sat, data = crop, type = "loglik-g")
+2*(Lsat - Lhat)
+```
+The results are wrong. 
+
+
+
+
+### CI Tests
+
+
+
+$G \ci W \mid V$ 
+
+```{r}
+t2 <- ci.test("G", "W", "V",  test = "mi-g", data = crop); t2$statistic
+```
+
+```{r}
+g2 <- DAG(W ~ V, V ~ G)
+basiSet(g2)
+fitDag(g2, S[c(6,5,3),c(6,5,3)], n = 200)$dev
+```
+
+```{r}
+#| fig-width: 7
+#| fig-height: 7
+#| out-width: "50%"
+bn2 <- model2network("[G][V|G][W|V]")
+bnsat <- model2network("[G][V|G][W|V:G]")
+# plot(bn2)
+Lhat <- score(bn2, data = crop[,c(3,5,6)], type = "loglik-g")
+Lsat <- score(bnsat, data = crop[,c(3,5,6)], type = "loglik-g")
+2*(Lsat - Lhat)
+```
+
+Thus the CI test `mi-g` is not consistent with the score `loglik-g`.
+
+
+$G \ci N \mid V$
+
+```{r}
+t3 <- ci.test("G", "N", "V",  test = "mi-g", data = crop); t3$statistic
+
+bn3 <- model2network("[V][G|V][N|V]")
+bnsat <- model2network("[G][N|G][V|N:G]")
+Lhat <- score(bn3, data = crop[,c(3,4,5)], type = "loglik-g")
+Lsat <- score(bnsat, data = crop[,c(3,4,5)], type = "loglik-g")
+2*(Lsat - Lhat)
+```
+
+Thus there is a difference !
+
+```{r}
+`ci_bn` <- function(A, B, C=NULL) {
+  if (is.null(C))
+  {
+    G <- diag(2)
+    dimnames(G) <- list(c(A, B), c(A, B))
+  }
+  else{
+    k <- length(C)
+    G <- rbind(matrix(0, 2, 2 + k),
+               cbind(matrix(1, k, 2), outer(1:k, 1:k, "<")))
+    V <- c(A, B, C)
+    dimnames(G) <- list(V, V)
+  }
+  iG <- graph_from_adjacency_matrix(G)
+  as.bn(iG)
+}
+```
+
+```{r}
+c1 <- ci_test2("G", "E", data = crop)$stat; c1
+c2 <- ci_test2("G", "W", "V", data = crop)$stat; c2
+c3 <- ci_test2("G", "N", "V",  data = crop)$stat; c3
+c4 <- ci_test2("G", "C", c("W", "N"), data = crop)$stat; c4
+c5 <- ci_test2("E", "W", "V", data = crop)$stat; c5
+c6 <- ci_test2("E", "N", "V", data = crop)$stat; c6
+c7 <- ci_test2("E", "C", c("W", "N"), data = crop)$stat; c7
+c8 <- ci_test2("V", "C", c("G", "E", "W", "N"),  data = crop)$stat; c8
+c9 <- ci_test2("W", "N", "V",  data = crop)$stat; c9
+c1+ c2 + c3 + c4 + c5 + c6 + c7 + c8 + c9
+```
+
+
+
+
+```{r}
+# `ci_test` <- function(A, B, C=NULL, data) {
+#   V <- c(A, B, C)
+#   data <- data[, V]
+#   bn <- ci_bn(A, B, C)
+#   sat <- amat(bn)
+#   sat[A, B] <- 1
+#   bnsat <- as.bn(graph_from_adjacency_matrix(sat))
+#   
+#   Lhat <- score(bn,    data, type = "loglik-g")
+#   Lsat <- score(bnsat, data, type = "loglik-g")
+#   2 * (Lsat - Lhat)
+# }
+```
+
+### New example with an undirected graph
+
+```{r}
+butterfly <- DAG(X1 ~ X2 + X5, X2 ~ X5, X5 ~ X3+ X4, X3 ~ X4)
+drawGraph(butterfly)
+```
+
+
+### First way
+
+```{r}
+ci_fact(butterfly)
+```
+Data from example of Whittaker
+
+```{r}
+colnames(marks)
+dat <- marks
+colnames(dat) <- c("X1", "X2", "X5", "X3", "X4")
+```
+
+```{r}
+g1 <- ci_test2("X1", c("X3", "X4"), c("X2", "X5"), data = dat, test = "mi-g")$stat
+g2 <- ci_test2("X2", c("X3", "X4"), c("X5"), data = dat, test = "mi-g")$stat
+addmargins(rbind(g1, g2), 1)
+```
+A finer partition
+
+```{r}
+g1 <- ci_test2("X1", "X3", c("X2", "X5"), data = dat, test = "mi-g")$stat
+g2 <- ci_test2("X1", "X4", c("X2", "X3", "X5"), data = dat, test = "mi-g")$stat
+g3 <- ci_test2("X2", "X3", c("X5"), data = dat, test = "mi-g")$stat
+g4 <- ci_test2("X2", "X4", c("X3", "X5"), data = dat, test = "mi-g")$stat
+addmargins(rbind(g1, g2, g3, g4), 1)
+```
+A different order
+ 
+```{r}
+g1 <- ci_test2("X1", "X3", c("X5"), data = dat, test = "mi-g")$stat
+g2 <- ci_test2("X2", "X3", c("X1",  "X5"), data = dat, test = "mi-g")$stat
+g3 <- ci_test2("X1", "X4", c("X3", "X5"), data = dat, test = "mi-g")$stat
+g4 <- ci_test2("X2", "X4", c("X1", "X3", "X5"), data = dat, test = "mi-g")$stat
+addmargins(rbind(g1, g2, g3, g4), 1)
+```
+
+### Deviance
+
+```{r}
+S <- cov(dat)
+a <- c("X1", "X2")
+b <- c("X3", "X4")
+c<- "X5"
+n <- nrow(dat)
+new <- S[a,c] %*% solve(S[c,c]) %*% S[c,b] 
+Shat <- S
+Shat[a,b] <- new
+Shat[b,a] <- t(new)
+lhat(Shat,n)   #fitted model
+lhat(S,n)   #sat model
+2*(lhat(S,n) -lhat(Shat,n))
+```
+
+Note that for the normal the composition property holds:
+$$
+(X_1, X_2) \ci X_5 \iff (X_1 \ci X_5) \&  (X_2 \ci X_5)
+$$
+But the test statistic for the joint independence  is not the sum of the test statistics of the two marginal independence  tests.
+
+```{r}
+ ci_test2("X3", "X1", "X5", data = dat)$stat + ci_test2("X3", "X2", c("X1", "X5"), data = dat)$stat
+```
+is right, while 
+
+```{r}
+ci_test2("X3", "X1", "X5", data = dat)$stat + ci_test2("X3", "X2", c("X5"), data = dat)$stat
+```
+is **wrong**!
+
+```{r}
+#| echo: false
+knitr::knit_exit()
+```
