@@ -74,9 +74,9 @@ ci_test("C", c("V","G","E"), c("S", "W"), test = "mi-g", data = crop)
 `LRtest` <- function(m_red, m_full) {
 l0 <- logLik(m_red)[1]
 lsat <- logLik(m_full)[1]
-w = 2 * (lsat - l0)
-df = m_red$df.residual - m_full$df.residual
-p = 1 - pchisq(w, df)
+w <- 2 * (lsat - l0)
+df <- m_red$df.residual - m_full$df.residual
+p <- 1 - pchisq(w, df)
 c(w = w, df = df, p = p)
 }
 ```

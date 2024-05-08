@@ -34,7 +34,8 @@ The original data are in R package **carData**.
 The first 3 variables are transformed to binary data.
 
 ```{r}
-wlfdata <- read.table("wlfdata.txt", header = TRUE, stringsAsFactors = TRUE)
+wlfdata <- read.table("wlfdata.txt", header = TRUE, colClasses = "character")
+wlfdata <- as.data.frame(lapply(wlfdata, factor))
 ```
 
 Below is the code for the transformation
@@ -89,9 +90,9 @@ anova(m_red1, m_full1, test = "Chisq")
 `LRtest` <- function(m_red, m_full) {
 l0 <- logLik(m_red)[1]
 lsat <- logLik(m_full)[1]
-w = 2 * (lsat - l0)
-df = m_red$df.residual - m_full$df.residual
-p = 1 - pchisq(w, df)
+w <- 2 * (lsat - l0)
+df <- m_red$df.residual - m_full$df.residual
+p <- 1 - pchisq(w, df)
 c(w = w, df = df, p = p)
 }
 ```
