@@ -1,0 +1,119 @@
+---
+title: "Analysis of data on canadian women Labour Force participation"
+author: "G. Marchetti"
+date: "21 08 2024"
+format: 
+  html:
+    embed-resources: true
+  pdf:
+    documentclass: scrartcl
+    number-sections: false
+    colorlinks: true
+    include-in-header: 
+      text: | 
+        \usepackage[default]{fontsetup} 
+---
+
+```{=tex}
+\DeclareMathAlphabet{\mathcal}{OMS}{cmsy}{m}{n}
+\setmathfont{NewCMMath-Regular.otf}
+\newcommand{\ci}{\hspace{0.1em}\perp\hspace{-0.95em}\perp\, }
+\renewcommand{\b}[1]{\boldsymbol{#1}}
+```
+```{r}
+#| include: false
+#| message: false
+source("~/Documents/R_packages/cat_regression_chains/RCG/funs_RCG.R")
+library("bnlearn") 
+library("ggm")
+```
+
+## Data on Women's Labour-Force Participation
+
+The data are transformed as follows.
+
+```{r}
+library(carData)
+data(Womenlf)
+
+wlfdata <- Womenlf 
+wlfdata$hincome <- factor(0 + (Womenlf$hincome > 14)) 
+wlfdata$partic <-  factor(0 + (Womenlf$partic == "fulltime"))
+wlfdata$children <-factor(0 + (Womenlf[,3]=="present"))
+wlfdata$region <- Womenlf[,4]
+colnames(wlfdata) <- c("L", "H", "C", "R")
+head(wlfdata)
+```
+Contingency table
+```{r}
+ftable(R ~ H + C + L, data = wlfdata)
+```
+
+### Test conditional independency
+
+You need package **bnlearn** for this.
+```{r}
+ci.test( "H", "C", "R", data = wlfdata, test = "mi")
+```
+```{r}
+#| include: false
+ci_test( "L", "R", c("C", "H") , data = wlfdata, test = "mi")
+```
+
+
+```{r}
+m_full0 <- glm(L ~ C *H * R, family = binomial, data = wlfdata)
+round(summary(m_full0)$coef, 3)
+m_red0 <- glm(L ~ C *  H, family = binomial, data = wlfdata)
+anova(m_red0, m_full0, test = "Chisq")
+```
+
+
+
+### Fit equation 1 
+
+```{r}
+m_full1 <- glm(L ~ C + H + R, family = binomial, data = wlfdata)
+round(summary(m_full1)$coef, 3)
+m_red1 <- glm(L ~ C + H, family = binomial, data = wlfdata)
+anova(m_red1, m_full1, test = "Chisq")
+```
+
+```{r}
+`LRtest` <- function(m_red, m_full) {
+l0 <- logLik(m_red)[1]
+lsat <- logLik(m_full)[1]
+w = 2 * (lsat - l0)
+df = m_red$df.residual - m_full$df.residual
+p = 1 - pchisq(w, df)
+c(w = w, df = df, p = p)
+}
+```
+
+```{r}
+LRtest(m_red1, m_full1)
+```
+
+### Fit equation 2
+
+```{r}
+m_full2 <- glm(C~ H+R, family = binomial, data = wlfdata)
+round(summary(m_full2)$coef, 3)
+m_red2 <- glm(C~ R, family = binomial, data = wlfdata)
+LRtest(m_red2, m_full2)
+```
+
+
+### Fit equation 3
+
+
+```{r}
+m_full3 <- glm(H ~ R, family = binomial, data = wlfdata)
+round(summary(m_full3)$coef, 3)
+m_red3 <- glm(H ~ 1, family = binomial, data = wlfdata)
+LRtest(m_red3, m_full3)
+```
+
+
+
+
