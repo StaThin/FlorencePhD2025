@@ -63,7 +63,7 @@ anova(m_red1, m_full1, test = "F")
 ```
 
 
-### LR test (asymptotic)
+### LR test (asymptotic)     
 
 ```{r}
 #| include: false
