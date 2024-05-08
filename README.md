@@ -8,6 +8,6 @@
 - D-separation
 - Some R examples: cropdata.pdf and wlfdata.pdf
 
-
+Slides: PhDnotes_1.pdf
 
 
