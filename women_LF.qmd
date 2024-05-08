@@ -1,5 +1,5 @@
 ---
-title: "Analysis of data on canadian women Labour Force participacion"
+title: "Analysis of data on canadian women Labour Force participation"
 author: "G. Marchetti"
 date: "21 08 2024"
 format: 
