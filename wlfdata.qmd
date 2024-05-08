@@ -30,9 +30,15 @@ library("ggm")
 
 ## Data on Women's Labour-Force Participation
 
-The data are transformed as follows.
+The original data are in R package **carData**.
+The first 3 variables are transformed to binary data.
 
 ```{r}
+wlfdata <- read.table("wlfdata.txt", header = TRUE, stringsAsFactors = TRUE)
+```
+
+Below is the code for the transformation
+```
 library(carData)
 data(Womenlf)
 
