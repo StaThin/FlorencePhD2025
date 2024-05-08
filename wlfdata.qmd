@@ -51,7 +51,7 @@ ftable(R ~ H + C + L, data = wlfdata)
 
 ### Test conditional independency
 
-You need package **bnlearn** for this.
+You need package **bnlearn** for this.   
 ```{r}
 ci.test( "H", "C", "R", data = wlfdata, test = "mi")
 ```
