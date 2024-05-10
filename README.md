@@ -8,6 +8,12 @@
 - D-separation
 - Some R examples: cropdata.pdf and wlfdata.pdf
 
+Slides: PhDnotes_1.pdf
 
-
-
+### Lecture 2
+- Undirected graphs
+- Differences with DAG models
+- ML fitting
+- High dimensional data
+- Bidirected graphs
+- Connected set Markov property
