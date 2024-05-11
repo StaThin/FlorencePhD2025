@@ -1,0 +1,122 @@
+---
+title: "DAG structure learning"
+author: "G. Marchetti"
+date: "21 10 2024"
+format: 
+  html:
+    embed-resources: true
+  pdf:
+    documentclass: scrartcl
+    number-sections: false
+    colorlinks: true
+    include-in-header: 
+      text: | 
+        \usepackage[default]{fontsetup} 
+---
+
+```{=tex}
+\DeclareMathAlphabet{\mathcal}{OMS}{cmsy}{m}{n}
+\setmathfont{NewCMMath-Regular.otf}
+\newcommand{\ci}{\hspace{0.1em}\perp\hspace{-0.95em}\perp\, }
+\renewcommand{\b}[1]{\boldsymbol{#1}}
+```
+```{r}
+#| include: false
+#| message: false
+source("~/Documents/R_packages/cat_regression_chains/RCG/funs_RCG.R")
+library("bnlearn") 
+library("ggm")
+library("mvtnorm")
+```
+## The true generating process
+```{r}
+#| include: false
+D <- diag(c(2, 2, 2, 0.5, 1, 1))
+a1 <- 0.5
+a2 <- -0.8
+a3 <- -0.9
+a4 <- 0.5
+a5 <- 0.7
+a6 <- 0.6
+#     x3    x6    x1    x2   x4   x5
+A <- matrix(
+  c(
+    1, -a1, 0, -a2, 0, 0,
+    0, 1, -a3, 0, 0, -a4,
+    0, 0, 1, -a5, -a6, 0,
+    0, 0, 0, 1, 0, 0,
+    0, 0, 0, 0, 1, 0,
+    0, 0, 0, 0, 0, 1
+  ),
+  byrow = TRUE, 6, 6
+)
+O <- t(A) %*% solve(D) %*% A
+S <- solve(O)
+require(mvtnorm)
+set.seed(250)
+n <- 200
+X <- rmvnorm(n = n, sigma = S)
+X <- data.frame(X)
+colnames(X) <- c("x3", "x6", "x1", "x2", "x4", "x5")
+X <- X[, c(3, 4, 1, 5, 6, 2)]
+
+su <- apply(X, 2, function(x) rbind(mean(x), sd(x)))
+rownames(su) <- c("mean", "sd")
+print(round(su, 3))
+```
+The true DAG
+
+```{r}
+D <- matrix(
+  c(
+    1, 1, 0, 1, 0, 0,
+    0, 1, 1, 0, 0, 1,
+    0, 0, 1, 1, 1, 0,
+    0, 0, 0, 1, 0, 0,
+    0, 0, 0, 0, 1, 0,
+    0, 0, 0, 0, 0, 1
+  ),
+  byrow = TRUE, 6, 6
+)
+D <- t(D- diag(6))
+V <- c("x3", "x6", "x1", "x2", "x4", "x5")
+dimnames(D) <- list(V,V)
+co <- structure(c(9, 32, 65, 90, 95, 
+                  61, 77, 51, 50, 80, 
+                  21, 20), dim = c(6L, 2L))
+drawGraph(D, coor = co)
+```
+## The data set
+```{r}
+#| fig-width: 4
+#| fig-height: 4
+source("simdat.R")
+
+pairs(simdat,  pch = '.')
+```
+```{r}
+su= apply(simdat, 2, function(x) rbind(mean(x), sd(x)))
+rownames(su) = c("mean", "sd")
+print(round(su, 3))
+cor(simdat)
+```
+## Structure learning 
+
+Hill climbing
+```{r}
+#| fig-width: 5
+#| fig-height: 5
+out <- hc(simdat, score = "bic-g", debug = FALSE)
+f <- modelstring(out)
+plot(model2network(f))
+```
+```{r}
+G <- DAG(x4 ~ x1, x2~x3, x1 ~ x6+x5, x5 ~ x6, x3 ~ x6 )
+co <- structure(c(9, 56, 15, 74, 95, 82, 47, 48, 
+                  80, 80, 49, 20), dim = c(6L, 2L))
+drawGraph(G, coor = co)
+```
+
+```{r}
+pc.stable(simdat, test = "mi-g")
+```
