@@ -14,6 +14,5 @@ Slides: PhDnotes_1.pdf
 - Undirected graphs
 - Differences with DAG models
 - ML fitting
-- High dimensional data
 - Bidirected graphs
 - Connected set Markov property
