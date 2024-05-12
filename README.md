@@ -1,4 +1,4 @@
-## Three lectures on Graphical Markov models
+bnlearn## Three lectures on Graphical Markov models
 
 ###  Lecture 1
 - Conditional independence
