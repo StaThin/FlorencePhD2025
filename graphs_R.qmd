@@ -50,3 +50,8 @@ G <- UG(~a*b + b*c*d + e)
 G
 drawGraph(G)
 ```
+
+## Find cliques
+```{r}
+get_cliques(A)
+```
