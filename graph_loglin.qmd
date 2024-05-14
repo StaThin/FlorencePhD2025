@@ -1,0 +1,106 @@
+---
+title: "Log-linear models and conditional independence"
+author: "G. Marchetti"
+date: "May 13 2024"
+format: 
+  html:
+    embed-resources: true
+  pdf:
+    documentclass: scrartcl
+    number-sections: false
+    colorlinks: true
+    include-in-header: 
+      text: | 
+        \usepackage[default]{fontsetup} 
+---
+
+```{=tex}
+\DeclareMathAlphabet{\mathcal}{OMS}{cmsy}{m}{n}
+\setmathfont{NewCMMath-Regular.otf}
+\newcommand{\ci}{\hspace{0.1em}\perp\hspace{-0.95em}\perp\, }
+\renewcommand{\b}[1]{\boldsymbol{#1}}
+```
+```{r}
+#| include: false
+#| message: false
+source("~/Documents/R_packages/cat_regression_chains/RCG/funs_RCG.R")
+library("bnlearn") 
+library("ggm")
+library("gRbase")
+library("igraph")
+```
+
+
+# Log-linear model and factorization
+
+A joint probability vector for the model of conditional independence: $X_2$ independent of $X_3$ given $X_1$. 
+
+```{r}
+u1 <- 0.2
+u2 <- -0.2
+u3 <- 1.2
+u12 <- 0.8
+u13 <- -0.5
+u23 <- 0
+u123 <- 0
+lam <- c(0, u1, u2, u12, u3, u13, 0, 0)
+
+L <- matrix(c(1,1,0,1), 2, 2)
+M <- L  %x% L %x% L
+p <- exp(M %*% lam)
+p <- p/sum(p)
+p
+```
+The contingency table
+```{r}
+X <- expand.grid(X1 = c(0,1), X2 = c(0,1), X3 = c(0,1), stringsAsFactors = TRUE)
+data3 <- data.frame(X, p)
+data3
+```
+```{r}
+ftable(X1 + X2 ~ X3, xtabs(p ~. , data3))
+```
+The conditional odds-ratio are both 1
+```{r}
+(0.05480844 * 0.14898478)/ (0.18197043 * 0.04487335)
+```
+```{r}
+(0.06694318 * 0.24563438)/(0.13480701 * 0.12197842)
+```
+
+# An example
+
+Some old data concerning breas cancer reported by Morrison n (1973). The three factors are
+
+- $X_1$ diagnostic center
+- $X_2$ nuclear grade 
+- $X_3$ survival after three years 
+
+```{r}
+Freq <- c(35, 42, 59, 77, 47, 26, 112, 76)
+data_bc <- data.frame(expand.grid(X1 = c("Boston", "Glamorgan"), X2 = c("malignant", "benign"), X3 = c("died", "survived"), stringsAsFactors = TRUE), Freq)
+
+data_bc
+
+ftable(X1 + X2 ~ X3, xtabs(Freq ~., data_bc))
+```
+
+Fit a saturated model 
+
+```{r}
+m_sat  <-glm(Freq ~ X1 * X2 * X3, family = poisson, data = data_bc)
+m_sat
+```
+
+Fit a log-linear model
+
+```{r}
+m_ci <- glm(Freq ~ X1 * X2 + X1 * X3, family = poisson, data = data_bc)
+m_ci
+```
+
+The likelihood ratio test is $G^2_2 = 4.072$ that is not significant. 
+
+```{r}
+anova(m_ci, m_sat, test = "Chisq")
+```
