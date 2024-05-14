@@ -27,9 +27,10 @@ source("~/Documents/R_packages/cat_regression_chains/RCG/funs_RCG.R")
 library("bnlearn") 
 library("ggm")
 library("gRbase")
+library("igraph")
 ```
 
-# Differences between **ggm** and **grBase**
+# Using  **ggm**,  **grBase**, **igraph** together
 
 Using **gRbase**
 
@@ -43,15 +44,53 @@ Using **ggm**
 
 Adjacency matrix and plot
 ```{r}
-#| fig-width: 5
-#| fig-height: 5
+#| fig-width: 4
+#| fig-height: 4
 #| out-width: "50%" 
 G <- UG(~a*b + b*c*d + e)
 G
-drawGraph(G)
+drawGraph(G, layout = layout_nicely)
 ```
 
 ## Find cliques
+
+With **gRbase*
 ```{r}
 get_cliques(A)
+```
+
+## Separation
+
+With **ggm** and **igraph**
+```{r}
+#| fig-width: 4
+#| fig-height: 3
+#| out-width: "50%" 
+G <- UG( ~ x1*x3*x4 + x2*x3*x5 + x3*x4*x5)
+drawGraph(G, layout = layout_nicely)
+```
+With **gRbase** and **igraph**
+
+```{r}
+g <- graph_from_adjacency_matrix(G, mode = "undirected")
+separates("x5", "x1", "x4", g)
+```
+
+```{r}
+separates("x5", "x1", c("x4","x3"), g)
+```
+
+```{r}
+get_cliques(g)
+```
+
+# Exercise
+
+Lauritzen's graph
+
+```{r}
+G <- UG(~ x1*x2 + x2*x5 + x5*x3 + 
+           + x1*x3 + x2*x4 + x4*x7 +
+           + x7*x5 + x3*x6 + x5*x6 + x7*x6)
+drawGraph(G, layout = layout_nicely)
 ```
