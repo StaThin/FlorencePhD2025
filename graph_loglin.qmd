@@ -76,26 +76,33 @@ Some old data concerning breas cancer reported by Morrison n (1973). The three f
 - $X_2$ nuclear grade 
 - $X_3$ survival after three years 
 
+
+Read the data 
+
 ```{r}
+#| include: false
 Freq <- c(35, 42, 59, 77, 47, 26, 112, 76)
 data_bc <- data.frame(expand.grid(X1 = c("Boston", "Glamorgan"), X2 = c("malignant", "benign"), X3 = c("died", "survived"), stringsAsFactors = TRUE), Freq)
+```
+```{r}
+library(readr)
+data_bc<- read_rds("data_bc.rds")
 
-data_bc
-
-ftable(X1 + X2 ~ X3, xtabs(Freq ~., data_bc))
+ftable(X1 + X2 ~ X3, table(data_bc))
 ```
 
 Fit a saturated model 
 
 ```{r}
-m_sat  <-glm(Freq ~ X1 * X2 * X3, family = poisson, data = data_bc)
+df_bc <- as.data.frame(table(data_bc))
+m_sat  <-glm(Freq ~ X1 * X2 * X3, family = poisson, data = df_bc)
 m_sat
 ```
 
 Fit a log-linear model
 
 ```{r}
-m_ci <- glm(Freq ~ X1 * X2 + X1 * X3, family = poisson, data = data_bc)
+m_ci <- glm(Freq ~ X1 * X2 + X1 * X3, family = poisson, data = df_bc)
 m_ci
 ```
 
@@ -103,4 +110,12 @@ The likelihood ratio test is $G^2_2 = 4.072$ that is not significant.
 
 ```{r}
 anova(m_ci, m_sat, test = "Chisq")
+```
+
+# Using a significance test for the same conditional independence
+
+Use the package **bnlearn**
+
+```{r}
+ci.test("X2", "X3", "X1", data = data_bc)
 ```
