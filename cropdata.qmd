@@ -22,14 +22,11 @@ format:
 ```
 ```{r}
 #| message: false
+#| warning: false
 source("~/Documents/R_packages/cat_regression_chains/RCG/funs_RCG.R")
 library("bnlearn") 
 library("ggm")
 library(mnormt)
-```
-
-```{r}
-#| cache: true
 ```
 
 Read the data
