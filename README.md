@@ -8,7 +8,7 @@
 - D-separation
 - Some R examples: cropdata.pdf and wlfdata.pdf
 
-Slides: PhDnotes_1.pdf
+Slides: PhD notes 1.pdf
 
 ### Lecture 2
 - Undirected graphs
@@ -18,3 +18,5 @@ Slides: PhDnotes_1.pdf
 - Decomposability
 - CI tests
 - Examples
+
+Slides: PhD notes 2.pdf
