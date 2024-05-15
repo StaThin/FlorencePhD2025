@@ -1,0 +1,75 @@
+---
+title: "UG structure learning"
+author: "G. Marchetti"
+date: "21 10 2024"
+format: 
+  html:
+    embed-resources: true
+  pdf:
+    documentclass: scrartcl
+    number-sections: false
+    colorlinks: true
+    include-in-header: 
+      text: | 
+        \usepackage[default]{fontsetup} 
+---
+
+```{=tex}
+\DeclareMathAlphabet{\mathcal}{OMS}{cmsy}{m}{n}
+\setmathfont{NewCMMath-Regular.otf}
+\newcommand{\ci}{\hspace{0.1em}\perp\hspace{-0.95em}\perp\, }
+\renewcommand{\b}[1]{\boldsymbol{#1}}
+```
+```{r}
+#| include: false
+#| message: false
+source("~/Documents/R_packages/cat_regression_chains/RCG/funs_RCG.R")
+library("bnlearn") 
+library("igraph")
+library("ggm")
+library("mvtnorm")
+```
+# Data on six simulated variables 
+
+## The data set
+```{r}
+#| fig-width: 6
+#| fig-height: 6
+#| out-width: "50%"
+source("simdat.R")
+
+pairs(simdat,  pch = 1, cex = .5)
+```
+```{r}
+su <- apply(simdat, 2, function(x) rbind(mean(x), sd(x)))
+rownames(su) <- c("mean", "sd")
+print(round(su, 3))
+round(cor(simdat), 3)
+```
+
+## Partial correlations
+
+```{r}
+S<- cov(simdat)
+P <- parcor(S)
+round(P, 3)
+```
+
+```{r}
+G <- 0+(abs(P)>0.05)
+diag(G) <- 0
+drawGraph(G, layout = layout_in_circle)
+```
+
+# MLE fit graph of $G$
+
+```{r}
+out <- fitConGraph(G,S, n = ncol(simdat)) 
+out
+```
+
+Concentration matrix
+```{r}
+Khat <- solve(out$Shat)
+round(Khat,3)
+```
