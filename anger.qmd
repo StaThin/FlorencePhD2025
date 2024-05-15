@@ -1,0 +1,89 @@
+---
+title: "UG Anger-Anxiety data"
+author: "G. Marchetti"
+date: "5 15 2024"
+format: 
+  html:
+    embed-resources: true
+  pdf:
+    documentclass: scrartcl
+    number-sections: false
+    colorlinks: true
+    include-in-header: 
+      text: | 
+        \usepackage[default]{fontsetup} 
+---
+
+```{=tex}
+\DeclareMathAlphabet{\mathcal}{OMS}{cmsy}{m}{n}
+\setmathfont{NewCMMath-Regular.otf}
+\newcommand{\ci}{\hspace{0.1em}\perp\hspace{-0.95em}\perp\, }
+\renewcommand{\b}[1]{\boldsymbol{#1}}
+```
+```{r}
+#| include: false
+#| message: false
+source("~/Documents/R_packages/cat_regression_chains/RCG/funs_RCG.R")
+library("bnlearn") 
+library("igraph")
+library("ggm")
+library("gRbase")
+library("mvtnorm")
+```
+
+# Data 
+
+The sample size is $N = 684$. The data are in **ggm**, 
+but the names are wrong and do not correspond to Cox and Wermuth book Table 3.1. 
+```{r}
+data("anger")
+nam <- c('Y','X','V','U')
+dimnames(anger) <- list(nam,nam)
+anger
+```
+Correlations (lower triangle) an partial correlations
+(upper triangle)
+```{r}
+round(correlations(anger),2)
+```
+
+Notice that all the marginal correlations are large
+while two partial correlations are quite small.
+
+Test the hypotheses
+$$
+Y \ci U \mid XV, \quad \text { and } \quad 
+X \ci V \mid YU.
+$$
+
+```{r}
+N <- 684
+P <- parcor(anger)
+dev1 <- -N * log(1 - P[1,4]^2)
+dev1
+dev2 <- -N * log(1 - P[2,3]^2)
+dev2 
+```
+
+Both test are separately not sgnificant
+
+## Fitted UG model
+
+```{r}
+#| fig-width: 3
+#| fig-height: 3  
+G <- UG(~ X*U + V*U + Y*V + X*Y)
+drawGraph(G)
+out <- fitConGraph(G, anger, 684)
+out
+```
+
+Single edge deviance for edge $Y \sim V$
+```{r}
+#| fig-width: 3
+#| fig-height: 3 
+G1 <-  UG(~ X*U + V*U + Y*V + X*Y + Y*U)
+drawGraph(G1)
+out1 <- fitConGraph(G1, anger, 684)
+out1
+```

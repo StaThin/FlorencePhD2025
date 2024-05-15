@@ -1,0 +1,102 @@
+---
+title: "UG Reinis data"
+author: "G. Marchetti"
+date: "5 15 2024"
+format: 
+  html:
+    embed-resources: true
+  pdf:
+    documentclass: scrartcl
+    number-sections: false
+    colorlinks: true
+    include-in-header: 
+      text: | 
+        \usepackage[default]{fontsetup} 
+---
+
+```{=tex}
+\DeclareMathAlphabet{\mathcal}{OMS}{cmsy}{m}{n}
+\setmathfont{NewCMMath-Regular.otf}
+\newcommand{\ci}{\hspace{0.1em}\perp\hspace{-0.95em}\perp\, }
+\renewcommand{\b}[1]{\boldsymbol{#1}}
+```
+```{r}
+#| include: false
+#| message: false
+source("~/Documents/R_packages/cat_regression_chains/RCG/funs_RCG.R")
+library("bnlearn") 
+library("igraph")
+library("ggm")
+library("gRbase")
+library("mvtnorm")
+```
+
+# Reinis Data 
+
+Data collected at the beginning of a 15 year follow-up study of probable risk factors for coronary thrombosis. Data are from all men employed in a car factory ($N= 1841$).
+
+
+
+A table with 6 discrete variables. A: smoking, B: strenous mental work, C: strenuous physical work, D: systolic blood pressure, E: ratio of lipoproteins, F: Family anamnesis of coronary heart disease.
+
+
+
+```{r}
+library("readr")
+data_reinis <- read_rds("data_reinis.rds")
+colnames(data_reinis) <- c('A', 'B', 'C', 'D', 'E', 'F')
+tab_reinis <- table(data_reinis)
+head(as.data.frame(tab_reinis))
+```
+
+## Test of conditional independence
+
+A conditional independence $ F \ci D \mid BECA$ is expected.
+Let's test this hypothesis
+
+```{r}
+ci.test("F", "D", c("B", "E", "C", "A"), data = data_reinis)
+```
+The statistic `mi` is the same of the deviance. Apparently 
+the conditional independence is not rejected.
+
+The previous CI is implied for example by 
+the following graph 
+
+```{r}
+#| fig-width: 4
+#| fig-height: 2
+G <- UG(~ F*C*B + B*E*C*A + E*A*D)
+drawGraph(G, layout = layout_nicely)
+```
+
+## Fit the graph  
+
+```{r}
+m_red <- glm(Freq ~ F*C*B + B*E*C*A + E*A*D, 
+             family = poisson, 
+             data = as.data.frame(tab_reinis))
+summary(m_red)
+```
+
+## The model shows some further possible reductions
+
+The strongest terms correspond to `CB`, `CE`, `AD` and `CBA`. Therefore a suitable graph should be 
+```{r}
+G0 <- UG(~ F + C*B*A + C*E + A*D)
+drawGraph(G0, layout = layout_nicely)
+```
+Notice that surprisingly ther is a complete independence 
+of family anamnesis of CHD from the other variables.
+
+Fitting this graphical model we get
+
+```{r}
+m0 <- glm(Freq ~  F + C*B*A + C*E + A*D,
+             family = poisson, 
+             data = as.data.frame(tab_reinis))
+summary(m0)
+```
+The deviance however indicates a quite poor agreement with the hypothesis so this model is rejected.
+
+

@@ -27,6 +27,7 @@ source("~/Documents/R_packages/cat_regression_chains/RCG/funs_RCG.R")
 library("bnlearn") 
 library("igraph")
 library("ggm")
+library("gRbase")
 library("mvtnorm")
 ```
 # Data on six simulated variables 
@@ -72,4 +73,10 @@ Concentration matrix
 ```{r}
 Khat <- solve(out$Shat)
 round(Khat,3)
+```
+
+## Check decomposability
+
+```{r}
+is.triangulated(G)
 ```
