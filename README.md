@@ -13,6 +13,8 @@ Slides: PhDnotes_1.pdf
 ### Lecture 2
 - Undirected graphs
 - Differences with DAG models
-- ML fitting
-- Bidirected graphs
-- Connected set Markov property
+- Separation 
+- Global Markov Property 
+- Decomposability
+- CI tests
+- Examples
