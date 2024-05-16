@@ -36,13 +36,13 @@ library("igraph")
 A joint probability vector for the model of conditional independence: $X_2$ independent of $X_3$ given $X_1$. 
 
 ```{r}
-u1 <- 0.2
+u1 <-  0.2
 u2 <- -0.2
-u3 <- 1.2
+u3 <-  1.2
 u12 <- 0.8
-u13 <- -0.5
+u13 <- 0.5
 u23 <- 0
-u123 <- 0
+u123 <-0
 lam <- c(0, u1, u2, u12, u3, u13, 0, 0)
 
 L <- matrix(c(1,1,0,1), 2, 2)
@@ -70,7 +70,7 @@ The conditional odds-ratio are both 1
 
 # An example
 
-Some old data concerning breas cancer reported by Morrison n (1973). The three factors are
+Some old data concerning breast cancer reported by Morrison n (1973). The three factors are
 
 - $X_1$ diagnostic center
 - $X_2$ nuclear grade 
