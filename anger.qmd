@@ -4,7 +4,7 @@ author: "G. Marchetti"
 date: "5 15 2024"
 format: 
   html:
-    embed-resources: true
+    embed-resources: true   
   pdf:
     documentclass: scrartcl
     number-sections: false
