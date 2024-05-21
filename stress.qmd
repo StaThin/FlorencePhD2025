@@ -1,0 +1,78 @@
+---
+title: "Bi-directed graphs: Kohlmann data"
+author: "G. Marchetti"
+date: "5 15 2024"
+format: 
+  html:
+    embed-resources: true   
+  pdf:
+    documentclass: scrartcl
+    number-sections: false
+    colorlinks: true
+    include-in-header: 
+      text: | 
+        \usepackage[default]{fontsetup} 
+---
+
+```{=tex}
+\DeclareMathAlphabet{\mathcal}{OMS}{cmsy}{m}{n}
+\setmathfont{NewCMMath-Regular.otf}
+\newcommand{\ci}{\hspace{0.1em}\perp\hspace{-0.95em}\perp\, }
+\renewcommand{\b}[1]{\boldsymbol{#1}}
+```
+```{r}
+#| include: false
+#| message: false
+source("~/Documents/R_packages/cat_regression_chains/RCG/funs_RCG.R")
+library("bnlearn") 
+library("igraph")
+library("ggm")
+library("gRbase")
+library("mvtnorm")
+```
+
+# Data 
+
+The data are in package **ggm**.
+```{r}
+data("stress")
+nam <- c("Y", "X", "V", "U") 
+dimnames(stress) <- list(nam, nam)
+round(correlations(stress), 2)
+```
+
+```{r}
+bg <- 100 * UG(~ Y*X + V*U + X*U + V*Y)
+drawGraph(bg)
+```
+
+```{r}
+fitCovGraph(bg, stress, n = 72)
+```
+
+## Bi-directed graph Markov properties
+
+```{r}
+B <- makeMG(bg = UG(~ A*B*C + C*D + C*E))
+B
+drawGraph(B)
+```
+ 
+
+
+
+## M-separation
+
+```{r}
+msep(B, c("A", "B"), "D", "E")
+msep(B, c("A", "B"), "D")
+msep(B, "A", "D", "E")
+msep(B, "B", "D", c("A", "E"))
+msep(B, "B", "C")
+```
+
+```{r}
+A <- makeMG(dg = DAG(A ~B, C~ D+E), ug = 10*UG(~A*C + B*C) )
+drawGraph(A)
+MarkEqMag(B, A)
+```
