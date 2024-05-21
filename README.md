@@ -41,3 +41,5 @@ International Statistical Review, Vol. 70, No. 2 161-189
   graphical Gaussian models. Statistics and Computing, 6(3), 297–302
 - Hastie, T. Tibshirani, R. Friedman, J. (2009). The elements of statistical learning. Springer,
 chapter 17, sect. 17.1, 17.2, 17.3.
+- Wermuth, N. and Cox, D.R. (1998). Statistical Dependence and Independence. In: Encyclopedia of Biostatistics.
+  P. Armitage and T. Colton (eds). New York: Wiley, 4260-4264
