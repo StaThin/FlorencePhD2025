@@ -29,3 +29,15 @@ Slides: PhD notes 2.pdf
 - Markov properties
 - Examples for continuous variables
 - Exmaples for discrete data
+
+### Papers
+- Cox, D. R. and N. Wermuth (1993). Linear dependencies represented by chain graphs
+(with discussion). Statistical Science 8, 204–218,247–277 
+- Edwards, D. and Kreiner, S. (1983) The Analysis of Contingency Tables by Graphical Models
+Biometrika, Vol. 70, No. 3, 553-565
+- Dawid, A. P. (2002). Influence Diagrams for Causal Modelling and Inference
+International Statistical Review, Vol. 70, No. 2 161-189
+- Roverato, A., and Whittaker, J. (1996). Standard errors for the parameters of
+  graphical Gaussian models. Statistics and Computing, 6(3), 297–302
+- Hastie, T. Tibshirani, R. Friedman, J. (2009). The elements of statistical learning. Springer,
+chapter 17, sect. 17.1, 17.2, 17.3.
