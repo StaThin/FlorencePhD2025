@@ -28,7 +28,7 @@ Slides: PhD notes 2.pdf
 - Regression graph models
 - Markov properties
 - Examples for continuous variables
-- Exmaples for discrete data
+- Examples for discrete data
 
 ### Papers
 - Cox, D. R. and N. Wermuth (1993). Linear dependencies represented by chain graphs
