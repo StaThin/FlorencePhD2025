@@ -20,3 +20,12 @@ Slides: PhD notes 1.pdf
 - Examples
 
 Slides: PhD notes 2.pdf
+
+### Lecture 3
+- Bi-directed graph models
+- Markov properties
+- Examples
+- Regression graph models
+- Markov properties
+- Examples for continuous variables
+- Exmaples for discrete data
