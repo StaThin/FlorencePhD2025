@@ -30,6 +30,8 @@ Slides: PhD notes 2.pdf
 - Examples for continuous variables
 - Examples for discrete data
 
+Slides: PhD notes 3.pdf
+
 ### Papers
 - Cox, D. R. and N. Wermuth (1993). Linear dependencies represented by chain graphs
 (with discussion). Statistical Science 8, 204–218,247–277 
