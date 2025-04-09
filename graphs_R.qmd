@@ -1,7 +1,7 @@
 ---
 title: "Graphs in R"
 author: "G. Marchetti"
-date: "May 13§ 2024"
+date: "May 13 2024"
 format: 
   html:
     embed-resources: true
@@ -9,15 +9,9 @@ format:
     documentclass: scrartcl
     number-sections: false
     colorlinks: true
-    include-in-header: 
-      text: | 
-        \usepackage[default]{fontsetup} 
 ---
 
 ```{=tex}
-\DeclareMathAlphabet{\mathcal}{OMS}{cmsy}{m}{n}
-\setmathfont{NewCMMath-Regular.otf}
-\newcommand{\ci}{\hspace{0.1em}\perp\hspace{-0.95em}\perp\, }
 \renewcommand{\b}[1]{\boldsymbol{#1}}
 ```
 ```{r}
@@ -30,7 +24,7 @@ library("gRbase")
 library("igraph")
 ```
 
-# Using  **ggm**,  **grBase**, **igraph** together
+## Using  `ggm`,  `grBase`, `igraph` together
 
 Using **gRbase**
 
@@ -93,4 +87,17 @@ G <- UG(~ x1*x2 + x2*x5 + x5*x3 +
            + x1*x3 + x2*x4 + x4*x7 +
            + x7*x5 + x3*x6 + x5*x6 + x7*x6)
 drawGraph(G, layout = layout_nicely)
+```
+
+## Plot with ggm
+
+```{r}
+#| fig-width: 4
+#| fig-height: 3
+#| out-width: "50%" 
+source("~/Documents/R_packages/ggm/plotGraph2.R")
+D <- makeMG(dg = DAG(x2 ~ x1 + xH, x3 ~ x2 + xH))
+options(repr.plot.width = 4, repr.plot.height = 4)
+sg <- SG(D, M = "xH") 
+plotGraph2(sg, tcltk = FALSE, dashed = FALSE)
 ```
