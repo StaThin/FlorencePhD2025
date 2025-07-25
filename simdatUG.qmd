@@ -57,9 +57,9 @@ round(P, 3)
 ```
 
 ```{r}
-G <- 0+(abs(P)>0.05)
+G <- 0+(abs(P)>=0.05)
 diag(G) <- 0
-drawGraph(G, layout = layout_in_circle)
+drawGraph(G)
 ```
 
 # MLE fit graph of $G$

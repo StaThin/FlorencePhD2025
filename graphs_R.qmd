@@ -7,12 +7,15 @@ format:
     embed-resources: true
   pdf:
     documentclass: scrartcl
-    number-sections: false
+    number-sections: true
     colorlinks: true
 ---
+$\newcommand{\ci}{\,\perp\!\!\!\perp\,}$
 
 ```{=tex}
+\setkomafont{disposition}{\Large\sffamily}
 \renewcommand{\b}[1]{\boldsymbol{#1}}
+\newcommand{\ci}{\,\perp\!\!\!\perp\,}
 ```
 ```{r}
 #| include: false
@@ -24,11 +27,11 @@ library("gRbase")
 library("igraph")
 ```
 
-## Using  `ggm`,  `grBase`, `igraph` together
+# Using  `ggm`,  `grBase`, `igraph` together
 
 Using **gRbase**
 
-Adjacency matrix
+Adjacency matrix $X \ci Y$
 ```{r}
 A <- ug(~a*b, ~b*c*d, ~e) 
 as(A, "matrix") 
@@ -46,14 +49,14 @@ G
 drawGraph(G, layout = layout_nicely)
 ```
 
-## Find cliques
+# Find cliques
 
 With **gRbase*
 ```{r}
 get_cliques(A)
 ```
 
-## Separation
+# Separation
 
 With **ggm** and **igraph**
 ```{r}
@@ -89,7 +92,7 @@ G <- UG(~ x1*x2 + x2*x5 + x5*x3 +
 drawGraph(G, layout = layout_nicely)
 ```
 
-## Plot with ggm
+# Plot with ggm
 
 ```{r}
 #| fig-width: 4
@@ -101,3 +104,42 @@ options(repr.plot.width = 4, repr.plot.height = 4)
 sg <- SG(D, M = "xH") 
 plotGraph2(sg, tcltk = FALSE, dashed = FALSE)
 ```
+
+$$
+\begin{array}{|c|c|}\hline
+Age & Frequency \\ \hline
+18-25  & 15 \\
+26-35  & 33 \\
+36-45  & 22 \\ \hline
+\end{array}
+$$
+
+```{r}
+#| echo: false
+#| message: false
+#| fig-cap: "A directed acyclic graph."
+
+library(DiagrammeR)
+library(DiagrammeRsvg)  # for conversion to svg
+library(rsvg)           # for saving svg
+G <- DiagrammeR::grViz("
+  digraph mrdag {
+  graph [rankdir=TB]
+
+  node [shape=ellipse]
+  U [label='Confounders']
+
+  node [shape=box, height=0.3, width=0.3]
+  G [label='Genotype']
+  X [label='Phenotype']
+  Y [label='Outcome']
+  { rank = same; G X Y }
+
+  G -> X [minlen=3]
+  U -> X
+  U -> Y
+  X -> Y [minlen=3]
+  }
+  ", height = 150)
+```
+
