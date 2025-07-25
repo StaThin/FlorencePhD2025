@@ -1,4 +1,4 @@
-## Three lectures on Graphical Markov models
+## Three lectures on Graphical Markov models 2024
 
 ###  Lecture 1
 - Conditional independence
